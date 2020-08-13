@@ -1,29 +1,31 @@
 <?php
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+if (!defined('ABSPATH')) {
+    exit;
 }
 
-class WC_Isbank_Gateway_Form {
+class WC_Isbank_Gateway_Form
+{
 
-	public static function init_form( $args ) {
-		$form     = new WC_Payment_Gateway_CC();
-		$form->id = $args['form_id'];
+    public static function init_form($args)
+    {
+        $form = new WC_Payment_Gateway_CC();
+        $form->id = $args['form_id'];
 
-		$order      = new WC_Order( $args['order_id'] );
-		$return_url = get_home_url() . "/wc-api/wc_gateway_isbank";
-		$amount     = $order->order_total;
-		$rnd        = microtime();
-		$taksit     = '';
-		$hashstr    = $args['client_id'] . $args['order_id'] . $amount . $return_url . $return_url . 'Auth' . $taksit . $rnd . $args['store_key'];
-		$hash       = base64_encode( pack( 'H*', sha1( $hashstr ) ) );
+        $order = new WC_Order($args['order_id']);
+        $return_url = get_home_url() . "/wc-api/wc_gateway_isbank";
+        $amount = $order->order_total;
+        $rnd = microtime();
+        $taksit = '';
+        $hashstr = $args['client_id'] . $args['order_id'] . $amount . $return_url . $return_url . 'Auth' . $taksit . $rnd . $args['store_key'];
+        $hash = base64_encode(pack('H*', sha1($hashstr)));
 
-		$form_css = 'wc-isbank-checkout woocommerce-checkout';
-		$form_css = apply_filters( 'woocoomerce_isbank_css', $form_css );
+        $form_css = 'wc-isbank-checkout woocommerce-checkout';
+        $form_css = apply_filters('woocoomerce_isbank_css', $form_css);
 
-		wp_enqueue_script( 'wc-credit-card-form' );
-		ob_start();
-		?>
+        wp_enqueue_script('wc-credit-card-form');
+        ob_start();
+        ?>
         <form action="<?php echo $args['action_url']; ?>" class="<?php echo $form_css; ?>" method="post">
             <div id="payment" class="woocommerce-checkout-payment">
                 <ul class="wc_payment_methods payment_methods methods">
@@ -33,7 +35,7 @@ class WC_Isbank_Gateway_Form {
 
                                 <p class="form-row form-row-wide">
                                     <label for="isbank-card-number">
-                                        <?php echo __( 'Kart numarası', 'wc-isbank' ); ?>
+                                        <?php echo __('Kart numarası', 'wc-isbank'); ?>
                                         <span class="required">*</span>
                                     </label>
 
@@ -46,26 +48,26 @@ class WC_Isbank_Gateway_Form {
 
                                 <p class="form-row form-row-first">
                                     <label for="isbank-card-expiry">
-                                        <?php echo __( 'Vade (MM / YYYY)', 'wc-isbank' ); ?>
+                                        <?php echo __('Vade (MM / YY)', 'wc-isbank'); ?>
                                         <span class="required">*</span>
                                     </label>
 
                                     <input id="isbank-card-expiry"
                                            class="input-text wc-credit-card-form-card-expiry"
                                            inputmode="numeric" autocomplete="cc-exp" autocorrect="no"
-                                           autocapitalize="no" spellcheck="no" type="tel" placeholder="MM/YYYY"
+                                           autocapitalize="no" spellcheck="no" type="tel" placeholder="MM/YY"
                                            name="isbank-card-expiry"/>
                                 </p>
                                 <p class="form-row form-row-last">
-                                    <label for="isbank-card-cvc">
-                                        <?php echo __( 'Güvenlik Kodu', 'wc-isbank' ); ?>
+                                    <label for="isbank-card-cv2">
+                                        <?php echo __('Güvenlik Kodu', 'wc-isbank'); ?>
                                         <span class="required">*</span>
                                     </label>
 
-                                    <input id="isbank-card-cvc" class="input-text wc-credit-card-form-card-cvc"
+                                    <input id="isbank-card-cv2" class="input-text wc-credit-card-form-card-cvc"
                                            inputmode="numeric" autocomplete="off" autocorrect="no" autocapitalize="no"
                                            spellcheck="no" type="tel" maxlength="4" placeholder="CVC"
-                                           name="isbank-card-cvc" style="width:75px"/>
+                                           name="cv2" style="width:75px"/>
                                 </p>
                                 <div class="clear"></div>
 
@@ -84,51 +86,50 @@ class WC_Isbank_Gateway_Form {
                             </fieldset>
                         </div>
                     </li>
-                    <input type="submit" class="button alt" value="<?php echo __( 'Siparişi onayla', 'wc-isbank' ); ?>"/>
+                    <input type="submit" class="button alt" value="<?php echo __('Siparişi onayla', 'wc-isbank'); ?>"/>
                 </ul>
             </div>
         </form>
-		<?php
-		$html = ob_get_clean();
+        <?php
+        $html = ob_get_clean();
 
-		return $html;
-	}
+        return $html;
+    }
 
-	public static function validate_fields() {
-		if ( empty( $_POST['pan'] ) ||
-		     empty( $_POST['card_expriy'] ) ||
-		     empty( $_POST['card_cvc'] ) ) {
+    public static function validate_fields()
+    {
+        if (empty($_POST['pan']) ||
+            empty($_POST['card_expriy']) ||
+            empty($_POST['card_cvc'])) {
 
-			echo json_encode( array(
-				'result' => 'failure',
-				'msg'    => __( 'Tüm ödeme bilgi alanlarını doldurmalısın.', 'wc-isbank' )
-			) );
-			wp_die();
-		}
+            echo json_encode([
+                'result' => 'failure',
+                'msg'    => __('Lütfen tüm alanları doldurunuz.', 'wc-isbank')
+            ]);
+            wp_die();
+        }
 
-		$expiry_date = $_POST['card_expriy'];
-		$expiry_date = explode( ' / ', $expiry_date );
+        $expiry_date = explode(' / ', $_POST['card_expriy']);
+        if(empty($expiry_date[0]) || empty($expiry_date[1])){
+            echo json_encode([
+                'result' => 'failure',
+                'msg'    => __('Son kullanım tarihi geçerli değil.', 'wc-isbank')
+            ]);
+            wp_die();
+        }
 
-		if ( strlen( $expiry_date[1] ) < 4 ) {
-			echo json_encode( array(
-				'result' => 'failure',
-				'msg'    => __( 'Kart vade yılını 4 basamaklı girmelisin.', 'wc-isbank' )
-			) );
-			wp_die();
-		}
+        $expiry_date[1] = substr(date('Y'), 0, 2) . $expiry_date[1];
+        if (($expiry_date[0] < date('m') && $expiry_date[1] == date('Y')) || $expiry_date[1] < date('Y')) {
+            echo json_encode([
+                'result' => 'failure',
+                'msg'    => __('Vadesi dolmuş kart ile ödeme yapılamaz.', 'wc-isbank')
+            ]);
+            wp_die();
+        }
 
-		if ( ( $expiry_date[0] < date( 'm' ) && $expiry_date[1] == date( 'Y' ) ) || $expiry_date[1] < date( 'Y' ) ) {
-
-			echo json_encode( array(
-				'result' => 'failure',
-				'msg'    => __( 'Vadesi dolmuş kart ile ödeme yapamazsın.', 'wc-isbank' )
-			) );
-			wp_die();
-		}
-
-		echo json_encode( array(
-			'result' => 'success'
-		) );
-		wp_die();
-	}
+        echo json_encode([
+            'result' => 'success'
+        ]);
+        wp_die();
+    }
 }
